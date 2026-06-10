@@ -4,11 +4,21 @@ Dummy HTTP endpoints that simulate NOC Jenkins pipeline responses.
 
 ## Run the Streamlit UI
 
+1. Copy the example env file:
+
+```bash
+cp .env.example .env
+```
+
+2. Edit `.env` if needed.
+
+3. Start Streamlit:
+
 ```bash
 streamlit run ui.py --server.port 8501
 ```
 
-This also starts the FastAPI API server automatically on `http://127.0.0.1:8000` if it is not already running.
+This starts only the Streamlit UI. Run the FastAPI server separately with `uvicorn app:app --reload`.
 
 Then open the browser URL shown in the terminal.
 
@@ -18,10 +28,9 @@ Then open the browser URL shown in the terminal.
 uvicorn app:app --reload
 ```
 
-Open FastAPI docs at:
+Open FastAPI docs at `/docs` or `/redoc` on the API host.
 
-- `http://127.0.0.1:8000/docs`
-- `http://127.0.0.1:8000/redoc`
+If the API is hosted separately, set `FASTAPI_DOCS_URL` in `.env` before running Streamlit.
 
 ## Run both together
 

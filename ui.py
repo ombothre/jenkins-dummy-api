@@ -1,11 +1,9 @@
-import atexit
 import json
 import os
-import socket
-import subprocess
-import sys
 import time
 from typing import Any
+
+from dotenv import load_dotenv
 
 from common import (
     IMAGE_TO_URL_INPUT,
@@ -14,51 +12,9 @@ from common import (
     simulate_import_db_beauty_pipeline,
 )
 
-_api_process = None
+load_dotenv()
 
-
-def is_api_running(host: str = "127.0.0.1", port: int = 8000) -> bool:
-    try:
-        with socket.create_connection((host, port), timeout=1):
-            return True
-    except OSError:
-        return False
-
-
-def start_api_server() -> None:
-    global _api_process
-    if _api_process is not None and _api_process.poll() is None:
-        return
-
-    if is_api_running():
-        return
-
-    cmd = [
-        sys.executable,
-        "-m",
-        "uvicorn",
-        "app:app",
-        "--port",
-        "8000",
-        "--reload",
-    ]
-
-    env = os.environ.copy()
-
-    _api_process = subprocess.Popen(
-        cmd,
-        cwd=os.path.dirname(__file__),
-        env=env,
-        stdout=subprocess.DEVNULL,
-        stderr=subprocess.STDOUT,
-        start_new_session=True,
-    )
-
-    def _cleanup() -> None:
-        if _api_process is not None and _api_process.poll() is None:
-            _api_process.terminate()
-
-    atexit.register(_cleanup)
+FASTAPI_DOCS_URL = os.environ.get("FASTAPI_DOCS_URL", "/docs")
 
 
 def apply_streamlit_light_theme() -> None:
@@ -125,8 +81,6 @@ def render_pipeline_tab(
 def main() -> None:
     import streamlit as st
 
-    start_api_server()
-
     st.set_page_config(
         page_title="Jenkins Dummy APIs",
         page_icon=":gear:",
@@ -139,8 +93,9 @@ def main() -> None:
         "Local simulator for NOC automation pipeline responses. "
         "Edit the request JSON, trigger the pipeline, and review the dummy output."
     )
+    api_docs_url = FASTAPI_DOCS_URL
     st.markdown(
-        '<a href="http://127.0.0.1:8000/docs" target="_blank" '
+        f'<a href="{api_docs_url}" target="_blank" '
         'style="display:inline-block; padding:10px 16px; margin-top:10px; '
         'background-color:#4f46e5; color:#ffffff; border-radius:8px; '
         'text-decoration:none; font-weight:600;">Open FastAPI Docs</a>',
