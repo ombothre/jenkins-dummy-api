@@ -30,7 +30,7 @@ uvicorn app:app --reload
 
 Open FastAPI docs at `/docs` or `/redoc` on the API host.
 
-If the API is hosted separately, set `FASTAPI_DOCS_URL` in `.env` before running Streamlit.
+If the API is hosted separately, set `FASTAPI_BASE_URL` and `FASTAPI_DOCS_URL` in `.env` before running Streamlit.
 
 ## Run both together
 

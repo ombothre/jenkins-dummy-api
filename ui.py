@@ -2,6 +2,7 @@ import json
 import os
 import time
 from typing import Any
+from urllib.parse import urljoin
 
 from dotenv import load_dotenv
 
@@ -14,7 +15,17 @@ from common import (
 
 load_dotenv()
 
-FASTAPI_DOCS_URL = os.environ.get("FASTAPI_DOCS_URL", "/docs")
+FASTAPI_BASE_URL = os.environ.get("FASTAPI_BASE_URL", "https://jenkins-dummy-api.onrender.com").strip().rstrip("/")
+FASTAPI_DOCS_URL = os.environ.get("FASTAPI_DOCS_URL", "/docs").strip()
+
+
+def build_fastapi_url(path: str) -> str:
+    if path.startswith("http://") or path.startswith("https://"):
+        return path
+    if FASTAPI_BASE_URL:
+        return urljoin(f"{FASTAPI_BASE_URL}/", path.lstrip("/"))
+    return path
+
 
 
 def apply_streamlit_light_theme() -> None:
@@ -72,7 +83,8 @@ def render_pipeline_tab(
             st.info("Trigger the pipeline to generate a random dummy response.")
 
         with st.expander("API usage"):
-            st.markdown(f"**POST** `{api_endpoint}`")
+            api_request_url = build_fastapi_url(api_endpoint)
+            st.markdown(f"**POST** `{api_request_url}`")
             st.markdown("Use this payload body for a JSON POST request:")
             st.code(json.dumps(default_payload, indent=2), language="json")
             st.markdown("Content-Type: `application/json` is required for API requests.")
@@ -93,14 +105,29 @@ def main() -> None:
         "Local simulator for NOC automation pipeline responses. "
         "Edit the request JSON, trigger the pipeline, and review the dummy output."
     )
-    api_docs_url = FASTAPI_DOCS_URL
-    st.markdown(
-        f'<a href="{api_docs_url}" target="_blank" '
-        'style="display:inline-block; padding:10px 16px; margin-top:10px; '
-        'background-color:#4f46e5; color:#ffffff; border-radius:8px; '
-        'text-decoration:none; font-weight:600;">Open FastAPI Docs</a>',
-        unsafe_allow_html=True,
-    )
+    api_docs_url = build_fastapi_url(FASTAPI_DOCS_URL)
+    api_root_url = build_fastapi_url("/")
+
+    if FASTAPI_BASE_URL:
+        st.markdown(
+            f'<div style="display:flex; gap:10px; margin-top:10px;">'
+            f'<a href="{api_root_url}" target="_blank" '
+            'style="display:inline-block; padding:10px 16px; background-color:#111827; color:#ffffff; '
+            'border-radius:8px; text-decoration:none; font-weight:600;">Open FastAPI API</a>'
+            f'<a href="{api_docs_url}" target="_blank" '
+            'style="display:inline-block; padding:10px 16px; background-color:#4f46e5; color:#ffffff; '
+            'border-radius:8px; text-decoration:none; font-weight:600;">Open FastAPI Docs</a>'
+            '</div>',
+            unsafe_allow_html=True,
+        )
+    else:
+        st.markdown(
+            f'<a href="{api_docs_url}" target="_blank" '
+            'style="display:inline-block; padding:10px 16px; margin-top:10px; '
+            'background-color:#4f46e5; color:#ffffff; border-radius:8px; '
+            'text-decoration:none; font-weight:600;">Open FastAPI Docs</a>',
+            unsafe_allow_html=True,
+        )
 
     image_tab, db_tab = st.tabs([
         "Image Upload / Image to URL",
