@@ -45,9 +45,11 @@ This starts:
 
 Available endpoints:
 
-- `POST /image-to-url`
-- `POST /import-db-beauty`
-- `GET /health`
+- `POST /image-to-url` - Convert images to static URLs
+- `POST /import-db-beauty` - Import database beauty data and purge cache
+- `POST /image-varnish-purge` - Purge image Varnish cache (recovery endpoint)
+- `POST /image-cloudflare-purge` - Purge image Cloudflare cache (recovery endpoint)
+- `GET /health` - Health check
 - `GET /`
 
 ## Example curl

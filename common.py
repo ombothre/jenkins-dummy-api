@@ -194,3 +194,76 @@ def simulate_import_db_beauty_pipeline(payload: dict[str, Any]) -> dict[str, Any
         }
 
     return response
+
+
+def simulate_image_varnish_purge_pipeline(payload: dict[str, Any]) -> dict[str, Any]:
+    success = random.choice([True, False])
+    image_urls = payload.get("image_urls", [])
+    job_name = payload.get("jenkins_job", "Nykaaman-varnish-url-flush")
+    build_number = random.randint(3100, 3200)
+
+    response = {
+        "request_id": payload.get("request_id", "IMG-POC-0001"),
+        "pipeline_type": "IMAGE_VARNISH_PURGE",
+        "status": "SUCCESS" if success else "FAILURE",
+        "jenkins": {
+            "job_name": job_name,
+            "build_number": build_number,
+            "build_url": (
+                "https://prod-jenkins-mumbai.nyk00-int.network/"
+                f"job/Flush-Varnish-Jobs/job/{job_name}/{build_number}/"
+            ),
+            "duration_seconds": random.randint(15, 45),
+        },
+        "output": {
+            "purged_urls": image_urls if success else [],
+            "message": "Image Varnish cache purged successfully." if success else "Image Varnish purge failed.",
+        },
+        "completed_at": utc_now(),
+    }
+
+    if not success:
+        response["error"] = {
+            "code": "IMAGE_VARNISH_PURGE_FAILED",
+            "message": "Dummy Jenkins run failed while purging image Varnish cache.",
+        }
+
+    return response
+
+
+def simulate_image_cloudflare_purge_pipeline(payload: dict[str, Any]) -> dict[str, Any]:
+    success = random.choice([True, False])
+    image_urls = payload.get("image_urls", [])
+    job_name = payload.get("jenkins_job", "cloudflare-url-cache-purge-man")
+    build_number = random.randint(4150, 4250)
+
+    # For Cloudflare, remove the https:// prefix from URLs in response
+    purged_urls = [url.replace("https://", "") for url in image_urls] if success else []
+
+    response = {
+        "request_id": payload.get("request_id", "IMG-POC-0001"),
+        "pipeline_type": "IMAGE_CLOUDFLARE_PURGE",
+        "status": "SUCCESS" if success else "FAILURE",
+        "jenkins": {
+            "job_name": job_name,
+            "build_number": build_number,
+            "build_url": (
+                "https://prod-jenkins-mumbai.nyk00-int.network/"
+                f"job/Flush-Varnish-Jobs/job/{job_name}/{build_number}/"
+            ),
+            "duration_seconds": random.randint(10, 35),
+        },
+        "output": {
+            "purged_urls": purged_urls,
+            "message": "Image Cloudflare cache purged successfully." if success else "Image Cloudflare purge failed.",
+        },
+        "completed_at": utc_now(),
+    }
+
+    if not success:
+        response["error"] = {
+            "code": "IMAGE_CLOUDFLARE_PURGE_FAILED",
+            "message": "Dummy Jenkins run failed while purging image Cloudflare cache.",
+        }
+
+    return response

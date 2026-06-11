@@ -1,0 +1,490 @@
+{
+  "openapi": "3.0.0",
+  "info": {
+    "title": "Jenkins Dummy APIs",
+    "description": "Dummy endpoints that simulate NOC Jenkins pipeline responses.",
+    "version": "0.1.0",
+    "contact": {
+      "name": "API Support"
+    }
+  },
+  "servers": [
+    {
+      "url": "http://127.0.0.1:8000",
+      "description": "Development server"
+    }
+  ],
+  "paths": {
+    "/": {
+      "get": {
+        "summary": "Root Endpoint",
+        "description": "Returns information about available endpoints",
+        "operationId": "root_get",
+        "tags": ["Root"],
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "message": {
+                      "type": "string",
+                      "example": "Jenkins Dummy APIs"
+                    },
+                    "description": {
+                      "type": "string",
+                      "example": "Use POST /image-to-url or POST /import-db-beauty to simulate pipeline responses."
+                    },
+                    "endpoints": {
+                      "type": "array",
+                      "items": {
+                        "type": "string"
+                      },
+                      "example": ["/image-to-url", "/import-db-beauty", "/health"]
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/health": {
+      "get": {
+        "summary": "Health Check",
+        "description": "Simple health check endpoint to verify the API is running",
+        "operationId": "health_get",
+        "tags": ["Health"],
+        "responses": {
+          "200": {
+            "description": "API is healthy",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "status": {
+                      "type": "string",
+                      "example": "ok"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/image-to-url": {
+      "post": {
+        "summary": "Image to URL Pipeline",
+        "description": "Simulates the Jenkins pipeline that converts images to static URLs",
+        "operationId": "image_to_url_post",
+        "tags": ["Pipelines"],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ImageToUrlRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Pipeline execution response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ImageToUrlResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation error"
+          }
+        }
+      }
+    },
+    "/import-db-beauty": {
+      "post": {
+        "summary": "Import DB Beauty Pipeline",
+        "description": "Simulates the Jenkins pipeline for importing database beauty data and purging Varnish cache",
+        "operationId": "import_db_beauty_post",
+        "tags": ["Pipelines"],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ImportDbBeautyRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Pipeline execution response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ImportDbBeautyResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation error"
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "ImageToUrlRequest": {
+        "type": "object",
+        "required": [
+          "request_id",
+          "pipeline_type",
+          "brand",
+          "source",
+          "jenkins_job",
+          "parameters",
+          "files"
+        ],
+        "properties": {
+          "request_id": {
+            "type": "string",
+            "example": "IMG-POC-0001",
+            "description": "Unique identifier for the request"
+          },
+          "pipeline_type": {
+            "type": "string",
+            "enum": ["IMAGE_TO_URL"],
+            "example": "IMAGE_TO_URL",
+            "description": "Type of pipeline"
+          },
+          "brand": {
+            "type": "string",
+            "example": "nykaaman",
+            "description": "Brand identifier"
+          },
+          "source": {
+            "type": "object",
+            "required": ["email_subject", "drive_link", "zip_file_name"],
+            "properties": {
+              "email_subject": {
+                "type": "string",
+                "example": "Image to URL"
+              },
+              "drive_link": {
+                "type": "string",
+                "example": "https://drive.google.com/drive/folders/dummy-folder-id"
+              },
+              "zip_file_name": {
+                "type": "string",
+                "example": "welcome-banners.zip"
+              }
+            }
+          },
+          "jenkins_job": {
+            "type": "string",
+            "example": "upload_file_to_create_static_url"
+          },
+          "parameters": {
+            "type": "object",
+            "required": ["DirName", "File.zip", "Useremail"],
+            "properties": {
+              "DirName": {
+                "type": "string",
+                "example": ""
+              },
+              "File.zip": {
+                "type": "string",
+                "example": "welcome-banners.zip"
+              },
+              "Useremail": {
+                "type": "string",
+                "example": "noc@nykaa.com"
+              }
+            }
+          },
+          "files": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "example": ["1stOrder-HP-App.jpg", "2ndOrder-HP-App.jpg"]
+          }
+        }
+      },
+      "ImageToUrlResponse": {
+        "type": "object",
+        "properties": {
+          "request_id": {
+            "type": "string",
+            "example": "IMG-POC-0001"
+          },
+          "pipeline_type": {
+            "type": "string",
+            "example": "IMAGE_TO_URL"
+          },
+          "status": {
+            "type": "string",
+            "enum": ["SUCCESS", "FAILURE"],
+            "example": "SUCCESS"
+          },
+          "jenkins": {
+            "type": "object",
+            "properties": {
+              "job_name": {
+                "type": "string",
+                "example": "upload_file_to_create_static_url"
+              },
+              "build_number": {
+                "type": "integer",
+                "example": 850
+              },
+              "build_url": {
+                "type": "string",
+                "example": "https://prod-jenkins-mumbai.nyk00-int.network/job/upload_file_to_create_static_url/850/"
+              },
+              "duration_seconds": {
+                "type": "integer",
+                "example": 52
+              }
+            }
+          },
+          "output": {
+            "type": "object",
+            "properties": {
+              "static_urls": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                },
+                "example": ["https://images-static.nykaa.com/media/1stOrder-HP-App.jpg"]
+              },
+              "notified_email": {
+                "type": "string",
+                "example": "noc@nykaa.com"
+              },
+              "slack_channel": {
+                "type": "string",
+                "example": "#noc-nykaa"
+              }
+            }
+          },
+          "error": {
+            "type": "object",
+            "properties": {
+              "code": {
+                "type": "string",
+                "enum": ["ZIP_EXTRACTION_FAILED", "STATIC_UPLOAD_FAILED", "JENKINS_BUILD_FAILED"]
+              },
+              "message": {
+                "type": "string"
+              }
+            }
+          },
+          "completed_at": {
+            "type": "string",
+            "format": "date-time",
+            "example": "2024-06-11T10:30:45Z"
+          }
+        }
+      },
+      "ImportDbBeautyRequest": {
+        "type": "object",
+        "required": [
+          "request_id",
+          "pipeline_type",
+          "brand",
+          "source",
+          "category_ids",
+          "product_ids",
+          "jenkins_jobs"
+        ],
+        "properties": {
+          "request_id": {
+            "type": "string",
+            "example": "DB-POC-0001"
+          },
+          "pipeline_type": {
+            "type": "string",
+            "enum": ["IMPORT_DB_BEAUTY"],
+            "example": "IMPORT_DB_BEAUTY"
+          },
+          "brand": {
+            "type": "string",
+            "example": "nykaa-beauty"
+          },
+          "source": {
+            "type": "object",
+            "required": ["email_subject", "requested_by"],
+            "properties": {
+              "email_subject": {
+                "type": "string",
+                "example": "Import DB pipeline for the below IDs"
+              },
+              "requested_by": {
+                "type": "string",
+                "example": "keyur.rana@nykaa.com"
+              }
+            }
+          },
+          "category_ids": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "example": ["58308", "58312"]
+          },
+          "product_ids": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "example": []
+          },
+          "jenkins_jobs": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/JenkinsJob"
+            }
+          }
+        }
+      },
+      "ImportDbBeautyResponse": {
+        "type": "object",
+        "properties": {
+          "request_id": {
+            "type": "string",
+            "example": "DB-POC-0001"
+          },
+          "pipeline_type": {
+            "type": "string",
+            "example": "IMPORT_DB_BEAUTY"
+          },
+          "status": {
+            "type": "string",
+            "enum": ["SUCCESS", "FAILURE"],
+            "example": "SUCCESS"
+          },
+          "stages": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/PipelineStage"
+            }
+          },
+          "output": {
+            "type": "object",
+            "properties": {
+              "imported_category_ids": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
+              },
+              "purged_category_ids": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
+              },
+              "product_ids": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
+              },
+              "message": {
+                "type": "string"
+              }
+            }
+          },
+          "error": {
+            "type": "object",
+            "properties": {
+              "code": {
+                "type": "string",
+                "enum": ["CATEGORY_IMPORT_FAILED", "VARNISH_PURGE_FAILED", "JENKINS_BUILD_FAILED"]
+              },
+              "message": {
+                "type": "string"
+              }
+            }
+          },
+          "completed_at": {
+            "type": "string",
+            "format": "date-time",
+            "example": "2024-06-11T11:15:30Z"
+          }
+        }
+      },
+      "JenkinsJob": {
+        "type": "object",
+        "required": ["sequence", "job_name", "parameters"],
+        "properties": {
+          "sequence": {
+            "type": "integer",
+            "example": 1
+          },
+          "job_name": {
+            "type": "string",
+            "example": "edna_category_importer"
+          },
+          "parameters": {
+            "type": "object",
+            "example": {}
+          }
+        }
+      },
+      "PipelineStage": {
+        "type": "object",
+        "properties": {
+          "job_name": {
+            "type": "string",
+            "example": "edna_category_importer"
+          },
+          "build_number": {
+            "type": "integer",
+            "example": 420
+          },
+          "status": {
+            "type": "string",
+            "enum": ["SUCCESS", "FAILURE"]
+          },
+          "duration_seconds": {
+            "type": "integer",
+            "example": 285
+          },
+          "build_url": {
+            "type": "string",
+            "example": "https://prod-jenkins-mumbai.nyk00-int.network/view/EDNA/job/edna_category_importer/420/"
+          }
+        }
+      }
+    }
+  },
+  "tags": [
+    {
+      "name": "Root",
+      "description": "API information endpoints"
+    },
+    {
+      "name": "Health",
+      "description": "Health check endpoints"
+    },
+    {
+      "name": "Pipelines",
+      "description": "Jenkins pipeline simulation endpoints"
+    }
+  ]
+}
