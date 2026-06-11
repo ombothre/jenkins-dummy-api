@@ -146,18 +146,20 @@ def render_api_explorer_tab() -> None:
     st.markdown(f"**URL:** `{build_fastapi_url(selected_path)}`")
 
     payload = endpoint_data["sample"]
+    payload_key = f"api_explorer_payload_{selected_path.strip('/').replace('/', '_') or 'root'}"
+
     if payload is not None:
         payload_text = st.text_area(
             "Request JSON",
             value=json.dumps(payload, indent=2),
             height=320,
-            key="api_explorer_payload",
+            key=payload_key,
         )
     else:
         payload_text = ""
         st.info("This endpoint does not require a request body.")
 
-    if st.button("Send API Request", key="api_explorer_send"):
+    if st.button("Send API Request", key=f"api_explorer_send_{selected_path.strip('/').replace('/', '_') or 'root'}"):
         if payload is not None:
             try:
                 payload = json.loads(payload_text)
@@ -174,6 +176,49 @@ def render_api_explorer_tab() -> None:
                 st.json(response_body, expanded=True)
             else:
                 st.code(response_body)
+
+
+def render_api_documentation_tab() -> None:
+    import streamlit as st
+
+    st.subheader("API Documentation")
+    st.markdown(
+        "This section shows the available API endpoints, request details, and sample payloads "
+        "in markdown format. Use it as quick reference documentation for the FastAPI backend."
+    )
+
+    for path, metadata in API_ENDPOINTS.items():
+        method = metadata["method"]
+        description = metadata["description"]
+        sample = metadata["sample"]
+
+        st.markdown(f"### `{method} {path}`")
+        st.markdown(f"{description}")
+        st.markdown(f"**URL:** `{build_fastapi_url(path)}`")
+
+        if sample is not None:
+            st.markdown("**Sample request body**")
+            st.code(json.dumps(sample, indent=2), language="json")
+        else:
+            st.markdown("**Sample request body**: None required for this endpoint.")
+
+        curl_payload = "" if sample is None else json.dumps(sample, indent=2)
+        if sample is not None:
+            escaped_payload = curl_payload.replace("'", "\\'")
+            st.markdown("**Sample curl command**")
+            st.code(
+                "curl -X {} \"{}\" \\\n  -H 'Content-Type: application/json' \\\n  -d '{}'".format(
+                    method,
+                    build_fastapi_url(path),
+                    escaped_payload,
+                ),
+                language="bash",
+            )
+        else:
+            st.markdown("**Sample curl command**")
+            st.code(f"curl -X {method} \"{build_fastapi_url(path)}\"", language="bash")
+
+        st.write("---")
 
 
 def apply_streamlit_light_theme() -> None:
@@ -250,8 +295,8 @@ def main() -> None:
 
     st.title("Jenkins Dummy APIs")
     st.markdown(
-        "Local simulator for NOC automation pipeline responses. "
-        "Edit the request JSON, trigger the pipeline, and review the dummy output."
+        "Interactive API documentation and explorer for the Jenkins dummy backend. "
+        "Use the tabs to view API docs or test requests directly."
     )
     api_docs_url = build_fastapi_url(FASTAPI_DOCS_URL)
     api_root_url = build_fastapi_url("/")
@@ -277,35 +322,13 @@ def main() -> None:
             unsafe_allow_html=True,
         )
 
-    render_api_list()
-
-    image_tab, db_tab, api_explorer_tab = st.tabs([
-        "Image Upload / Image to URL",
-        "Import DB Pipeline (Beauty)",
+    api_docs_tab, api_explorer_tab = st.tabs([
+        "API Docs",
         "API Explorer",
     ])
 
-    with image_tab:
-        render_pipeline_tab(
-            title="Image Upload / Image to URL Pipeline",
-            default_payload=IMAGE_TO_URL_INPUT,
-            text_area_key="image_payload",
-            run_button_key="run_image_pipeline",
-            response_key="image_response",
-            simulator=simulate_image_to_url_pipeline,
-            api_endpoint="/image-to-url",
-        )
-
-    with db_tab:
-        render_pipeline_tab(
-            title="Import DB Pipeline (Beauty)",
-            default_payload=IMPORT_DB_BEAUTY_INPUT,
-            text_area_key="db_payload",
-            run_button_key="run_db_pipeline",
-            response_key="db_response",
-            simulator=simulate_import_db_beauty_pipeline,
-            api_endpoint="/import-db-beauty",
-        )
+    with api_docs_tab:
+        render_api_documentation_tab()
 
     with api_explorer_tab:
         render_api_explorer_tab()
